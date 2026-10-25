@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Digital Banking{% endblock %}
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+<div class="container flash-home">{% include '_flash.html' %}</div>
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-copy">
+            <p class="eyebrow eyebrow-light">Digital banking &amp; loan processing</p>
+            <h1>Banking made <span class="accent">simpler.</span></h1>
+            <p class="lead">One platform for customer records, bank accounts, transactions and loan approvals — connected end to end and backed by a live cloud database.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary btn-lg" href="{{ url_for('dashboard') }}">Open dashboard {{ icon('arrow') }}</a>
+                <a class="btn btn-ghost-light btn-lg" href="#modules">Explore modules</a>
+            </div>
+            <p class="hero-status">
+                <span class="status-dot {{ 'on' if db_status == 'Connected' else 'off' }}"></span>
+                Database <strong>{{ db_status }}</strong>
+                <span class="sep">·</span> {{ summary.branches }} branch{{ '' if summary.branches == 1 else 'es' }}
+                <span class="sep">·</span> {{ summary.customers }} customer{{ '' if summary.customers == 1 else 's' }}
+            </p>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+            <div class="bank-card">
+                <div class="bank-card-top"><span class="chip"></span><span>FINORA · DEMO</span></div>
+                <p class="bank-card-number">•••• •••• •••• 2026</p>
+                <div class="bank-card-bottom">
+                    <div><small>Accounts</small><strong>{{ summary.accounts }}</strong></div>
+                    <div><small>Customers</small><strong>{{ summary.customers }}</strong></div>
+                    <div><small>Branches</small><strong>{{ summary.branches }}</strong></div>
+                </div>
+            </div>
+            <div class="float-chip float-chip-a">{{ icon('up') }} Deposit recorded</div>
+            <div class="float-chip float-chip-b">{{ icon('check') }} Loan approved</div>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip">
+    <div class="container trust-grid">
+        <div>{{ icon('shield') }}<span><strong>Validated data</strong> — PAN, Aadhaar, IFSC checks</span></div>
+        <div>{{ icon('bolt') }}<span><strong>Live cloud database</strong> — Firebase Realtime DB</span></div>
+        <div>{{ icon('clock') }}<span><strong>Full audit trail</strong> — every transaction logged</span></div>
+    </div>
+</section>
+
+<section id="modules" class="section">
+    <div class="container">
+        <div class="section-head">
+            <p class="eyebrow">Core modules</p>
+            <h2>Everything in one place.</h2>
+            <p class="section-sub">Each module links to the next, so a customer can go from registration to a funded account to an approved loan without leaving Finora.</p>
+        </div>
+        <div class="module-grid">
+            <a class="module-card" href="{{ url_for('customers') }}">
+                <span class="module-icon">{{ icon('users') }}</span>
+                <h3>Customers</h3>
+                <p>Register customers with KYC details and keep a searchable directory.</p>
+                <span class="module-link">Manage customers {{ icon('arrow') }}</span>
+            </a>
+            <a class="module-card" href="{{ url_for('branches') }}">
+                <span class="module-icon">{{ icon('building') }}</span>
+                <h3>Branches</h3>
+                <p>Set up branches with IFSC codes before opening accounts.</p>
+                <span class="module-link">Manage branches {{ icon('arrow') }}</span>
+            </a>
+            <a class="module-card" href="{{ url_for('accounts') }}">
+                <span class="module-icon">{{ icon('wallet') }}</span>
+                <h3>Accounts</h3>
+                <p>Open savings, current, salary and fixed-deposit accounts with live balances.</p>
+                <span class="module-link">Manage accounts {{ icon('arrow') }}</span>
+            </a>
+            <a class="module-card" href="{{ url_for('transactions') }}">
+                <span class="module-icon">{{ icon('swap') }}</span>
+                <h3>Transactions</h3>
+                <p>Record deposits and withdrawals with overdraft protection.</p>
+                <span class="module-link">Record transactions {{ icon('arrow') }}</span>
+            </a>
+            <a class="module-card" href="{{ url_for('loans') }}">
+                <span class="module-icon">{{ icon('landmark') }}</span>
+                <h3>Loans</h3>
+                <p>Take applications, approve or reject them, and track repayments.</p>
+                <span class="module-link">Process loans {{ icon('arrow') }}</span>
+            </a>
+            <a class="module-card" href="{{ url_for('dashboard') }}">
+                <span class="module-icon">{{ icon('grid') }}</span>
+                <h3>Dashboard</h3>
+                <p>See deposits, withdrawals, sanctioned loans and pending work at a glance.</p>
+                <span class="module-link">View dashboard {{ icon('arrow') }}</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-head">
+            <p class="eyebrow">How it works</p>
+            <h2>From first customer to first loan.</h2>
+        </div>
+        <ol class="steps">
+            <li><span class="step-num">1</span><h3>Add a branch</h3><p>Create at least one branch with its IFSC code.</p><a href="{{ url_for('branches') }}">Branches →</a></li>
+            <li><span class="step-num">2</span><h3>Register a customer</h3><p>Capture contact and KYC details once.</p><a href="{{ url_for('customers') }}">Customers →</a></li>
+            <li><span class="step-num">3</span><h3>Open an account</h3><p>Link the customer to a branch and account type.</p><a href="{{ url_for('accounts') }}">Accounts →</a></li>
+            <li><span class="step-num">4</span><h3>Move money</h3><p>Record deposits and withdrawals; balances update instantly.</p><a href="{{ url_for('transactions') }}">Transactions →</a></li>
+            <li><span class="step-num">5</span><h3>Lend</h3><p>Review applications, sanction loans, record repayments.</p><a href="{{ url_for('loans') }}">Loans →</a></li>
+        </ol>
+    </div>
+</section>
+
+<section id="about" class="section">
+    <div class="container about-grid">
+        <div>
+            <p class="eyebrow">About Finora</p>
+            <h2>Built around your database.</h2>
+            <p class="section-sub left">Finora is an academic Digital Banking and Loan Processing System built with Flask and the Firebase Realtime Database. It stores customers, branches, accounts, transactions, loan applications, sanctioned loans and repayments, and enforces the business rules between them.</p>
+        </div>
+        <ul class="about-list">
+            <li>{{ icon('check') }} Duplicate phone, email, Aadhaar and PAN detection</li>
+            <li>{{ icon('check') }} Withdrawals blocked when balance is insufficient</li>
+            <li>{{ icon('check') }} Loan repayments capped at the outstanding amount</li>
+            <li>{{ icon('check') }} CSRF-protected forms and validated input</li>
+        </ul>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="container cta-inner">
+        <div>
+            <h2>Ready to get started?</h2>
+            <p>Set up a branch, then register your first customer.</p>
+        </div>
+        <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="{{ url_for('branches') }}">Add a branch</a>
+            <a class="btn btn-ghost-light btn-lg" href="{{ url_for('customers') }}">Register customer</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

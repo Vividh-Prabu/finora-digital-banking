@@ -1,0 +1,80 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, csrf, page_header %}
+{% block title %}Graph{% endblock %}
+
+{% block page %}
+<div class="page-top">
+    {{ page_header('Neo4j graph', 'Relationship graph', 'Customers, accounts, branches, transactions and loans as a connected graph.') }}
+    {% if state == 'ok' %}
+    <form method="post" action="{{ url_for('graph_sync') }}" class="page-actions">
+        {{ csrf() }}
+        <button class="btn btn-secondary" type="submit">Sync from Firebase</button>
+    </form>
+    {% endif %}
+</div>
+
+{% if state != 'ok' %}
+<section class="panel">
+    <div class="flash {{ 'flash-error' if state == 'error' else 'flash-info' }}">{{ icon('info' if state == 'unconfigured' else 'alert') }}<span>{{ message }}</span></div>
+    <h2 class="setup-h">Connect Neo4j</h2>
+    <ol class="setup-steps">
+        <li>Create a free instance at <strong>neo4j.com/cloud/aura</strong> (or run Neo4j locally).</li>
+        <li>Add <code>NEO4J_URI</code>, <code>NEO4J_USERNAME</code>, <code>NEO4J_PASSWORD</code> and <code>NEO4J_DATABASE</code> to your <code>.env</code> file.</li>
+        <li>Run <code>pip install -r requirements.txt</code> and <code>python check_neo4j.py</code>.</li>
+        <li>Restart the app, then click <strong>Sync from Firebase</strong> here (or run <code>flask --app app sync-graph</code>).</li>
+    </ol>
+    <p class="muted">Finora works normally without Neo4j. Once connected, every new record is mirrored automatically.</p>
+</section>
+{% else %}
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Graph explorer</h2><p>Drag nodes, scroll to zoom, hover for details.</p></div>
+        <div class="graph-legend" id="graph-legend"></div></div>
+    <div id="graph-canvas" class="graph-canvas" role="img" aria-label="Relationship graph of customers, accounts, branches and loans"></div>
+    <p class="no-match" id="graph-empty" hidden>The graph is empty. Click “Sync from Firebase” to copy your data across.</p>
+</section>
+
+<section class="grid-2">
+    <article class="panel">
+        <div class="panel-head"><div><h2>Nodes</h2><p>By label</p></div></div>
+        {% if node_counts %}
+        <div class="table-wrap"><table><thead><tr><th>Label</th><th class="num">Count</th></tr></thead><tbody>
+            {% for n in node_counts %}<tr><td><span class="strong">{{ n.label }}</span></td><td class="num">{{ n.total }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<p class="empty-state">No nodes yet.</p>{% endif %}
+    </article>
+    <article class="panel">
+        <div class="panel-head"><div><h2>Relationships</h2><p>By type</p></div></div>
+        {% if rel_counts %}
+        <div class="table-wrap"><table><thead><tr><th>Type</th><th class="num">Count</th></tr></thead><tbody>
+            {% for r in rel_counts %}<tr><td><code>{{ r.type }}</code></td><td class="num">{{ r.total }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<p class="empty-state">No relationships yet.</p>{% endif %}
+    </article>
+</section>
+
+<section class="grid-2">
+    <article class="panel">
+        <div class="panel-head"><div><h2>Customer network</h2><p>Accounts and sanctioned loans per customer</p></div></div>
+        {% if customers %}
+        <div class="table-wrap"><table>
+            <thead><tr><th>Customer</th><th class="num">Accounts</th><th class="num">Loans</th><th class="num">Loan exposure</th></tr></thead>
+            <tbody>{% for c in customers %}<tr><td class="strong">{{ c.name }}</td><td class="num">{{ c.accounts }}</td><td class="num">{{ c.loans }}</td><td class="num">{{ c.exposure|inr }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="empty-state">No customers in the graph yet.</p>{% endif %}
+    </article>
+    <article class="panel">
+        <div class="panel-head"><div><h2>Branch activity</h2><p>Traversing Branch ← Account → Transaction</p></div></div>
+        {% if branch_rows %}
+        <div class="table-wrap"><table>
+            <thead><tr><th>Branch</th><th class="num">Accounts</th><th class="num">Txns</th><th class="num">Deposits</th><th class="num">Withdrawals</th></tr></thead>
+            <tbody>{% for b in branch_rows %}<tr><td><span class="strong">{{ b.name }}</span><br><small class="muted">{{ b.city }}</small></td><td class="num">{{ b.accounts }}</td><td class="num">{{ b.transactions }}</td><td class="num">{{ b.deposits|inr }}</td><td class="num">{{ b.withdrawals|inr }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="empty-state">No branches in the graph yet.</p>{% endif %}
+    </article>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+<script src="{{ url_for('static', filename='js/graph.js') }}" data-url="{{ url_for('graph_data') }}" defer></script>
+{% endif %}
+{% endblock %}

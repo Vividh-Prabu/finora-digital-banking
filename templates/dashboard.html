@@ -1,0 +1,135 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, badge, page_header %}
+{% block title %}Dashboard{% endblock %}
+
+{% block page %}
+<div class="page-top">
+    {{ page_header('Banking overview', 'Dashboard', 'Monitor customers, accounts, transactions and lending activity.') }}
+    <div class="page-actions">
+        <a class="btn btn-secondary" href="{{ url_for('transactions') }}">{{ icon('plus') }} Transaction</a>
+        <a class="btn btn-primary" href="{{ url_for('customers') }}">{{ icon('plus') }} Add customer</a>
+    </div>
+</div>
+
+<section class="stat-grid">
+    <a class="stat-card" href="{{ url_for('customers') }}">
+        <span class="stat-icon tone-blue">{{ icon('users') }}</span>
+        <div><p class="stat-label">Customers</p><p class="stat-value">{{ stats.customers }}</p><p class="stat-note">Registered customers</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('accounts') }}">
+        <span class="stat-icon tone-green">{{ icon('wallet') }}</span>
+        <div><p class="stat-label">Bank accounts</p><p class="stat-value">{{ stats.accounts }}</p><p class="stat-note">{{ stats.active_accounts }} active</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('transactions') }}">
+        <span class="stat-icon tone-purple">{{ icon('swap') }}</span>
+        <div><p class="stat-label">Transactions</p><p class="stat-value">{{ stats.transactions }}</p><p class="stat-note">Recorded to date</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('branches') }}">
+        <span class="stat-icon tone-amber">{{ icon('building') }}</span>
+        <div><p class="stat-label">Branches</p><p class="stat-value">{{ stats.branches }}</p><p class="stat-note">Operating branches</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('transactions') }}">
+        <span class="stat-icon tone-green">{{ icon('up') }}</span>
+        <div><p class="stat-label">Total deposits</p><p class="stat-value money">{{ stats.deposits|inr }}</p><p class="stat-note">Gross deposits</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('transactions') }}">
+        <span class="stat-icon tone-red">{{ icon('down') }}</span>
+        <div><p class="stat-label">Total withdrawals</p><p class="stat-value money">{{ stats.withdrawals|inr }}</p><p class="stat-note">Gross withdrawals</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('loans') }}">
+        <span class="stat-icon tone-teal">{{ icon('landmark') }}</span>
+        <div><p class="stat-label">Loans sanctioned</p><p class="stat-value money">{{ stats.loans|inr }}</p><p class="stat-note">Active and repaid loans</p></div>
+    </a>
+    <a class="stat-card" href="{{ url_for('loans') }}">
+        <span class="stat-icon tone-amber">{{ icon('clock') }}</span>
+        <div><p class="stat-label">Loans outstanding</p><p class="stat-value money">{{ stats.outstanding|inr }}</p><p class="stat-note">{{ stats.pending_applications }} application{{ '' if stats.pending_applications == 1 else 's' }} pending</p></div>
+    </a>
+</section>
+
+<section class="panel flow-panel">
+    <div class="panel-head"><div><h2>Cash flow</h2><p>Share of deposits versus withdrawals</p></div></div>
+    {% if stats.deposits or stats.withdrawals %}
+    <div class="flow-bar" role="img" aria-label="{{ stats.deposit_pct }}% deposits, {{ stats.withdrawal_pct }}% withdrawals">
+        <span class="flow-in" style="width: {{ stats.deposit_pct }}%"></span>
+        <span class="flow-out" style="width: {{ stats.withdrawal_pct }}%"></span>
+    </div>
+    <div class="flow-legend">
+        <span><i class="dot dot-in"></i>Deposits {{ stats.deposit_pct }}%</span>
+        <span><i class="dot dot-out"></i>Withdrawals {{ stats.withdrawal_pct }}%</span>
+    </div>
+    {% else %}
+    <p class="empty-state">No money movement yet. <a href="{{ url_for('transactions') }}">Record a transaction →</a></p>
+    {% endif %}
+</section>
+
+<section class="quick-actions">
+    <h2>Quick actions</h2>
+    <div class="quick-links">
+        <a href="{{ url_for('branches') }}">{{ icon('building') }} Add branch</a>
+        <a href="{{ url_for('customers') }}">{{ icon('users') }} Register customer</a>
+        <a href="{{ url_for('accounts') }}">{{ icon('wallet') }} Open account</a>
+        <a href="{{ url_for('transactions') }}">{{ icon('swap') }} Record transaction</a>
+        <a href="{{ url_for('loans') }}">{{ icon('landmark') }} New loan application</a>
+    </div>
+</section>
+
+<section class="grid-2">
+    <article class="panel">
+        <div class="panel-head">
+            <div><h2>Recent transactions</h2><p>Latest account activity</p></div>
+            <a class="link-arrow" href="{{ url_for('transactions') }}">View all →</a>
+        </div>
+        {% if recent_transactions %}
+        <div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Account</th><th>Type</th><th class="num">Amount</th><th>Mode</th></tr></thead>
+            <tbody>
+            {% for t in recent_transactions %}
+                <tr>
+                    <td>#{{ t.TransactionID }}</td>
+                    <td>{{ t.AccountNo }}</td>
+                    <td>{{ badge(t.TransactionType) }}</td>
+                    <td class="num">{{ t.Amount|inr }}</td>
+                    <td>{{ t.Mode or '—' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <p class="empty-state">No transactions yet. <a href="{{ url_for('transactions') }}">Record one →</a></p>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <div class="panel-head">
+            <div><h2>Recent loan applications</h2><p>Latest customer requests</p></div>
+            <a class="link-arrow" href="{{ url_for('loans') }}">View all →</a>
+        </div>
+        {% if recent_applications %}
+        <div class="table-wrap"><table>
+            <thead><tr><th>Customer</th><th>Type</th><th class="num">Requested</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for a in recent_applications %}
+                <tr>
+                    <td>{{ a.FullName }}</td>
+                    <td>{{ a.LoanType }}</td>
+                    <td class="num">{{ a.RequestedAmount|inr }}</td>
+                    <td>{{ badge(a.Status) }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <p class="empty-state">No applications yet. <a href="{{ url_for('loans') }}">Start one →</a></p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="callout {{ 'callout-warn' if stats.pending_applications else '' }}">
+    <span class="callout-icon">{{ icon('alert' if stats.pending_applications else 'check') }}</span>
+    <div>
+        <h2>{{ stats.pending_applications }} pending loan application{{ '' if stats.pending_applications == 1 else 's' }}</h2>
+        <p>{{ 'These are waiting for a decision.' if stats.pending_applications else 'You are all caught up.' }}</p>
+    </div>
+    <a class="btn btn-secondary" href="{{ url_for('loans') }}">Review applications</a>
+</section>
+{% endblock %}

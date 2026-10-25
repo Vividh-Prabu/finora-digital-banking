@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup required · Finora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<main class="container setup-page">
+    <a class="brand" href="/"><span class="brand-mark">F</span>Finora<span class="brand-dot">.</span></a>
+    <div class="panel setup-card">
+        <p class="eyebrow">Setup required</p>
+        <h1>Finora can't reach Firebase yet</h1>
+        <div class="flash flash-error"><span>{{ error }}</span></div>
+        <ol class="setup-steps">
+            <li>Copy <code>.env.example</code> to <code>.env</code>.</li>
+            <li>Set <code>FIREBASE_DATABASE_URL</code> to your Realtime Database URL.</li>
+            <li>Download a service-account key from Firebase Console → Project settings → Service accounts, and save it as <code>credentials/firebase-service-account.json</code>.</li>
+            <li>Restart the server, then run <code>flask --app app seed-demo</code> to add a demo branch.</li>
+        </ol>
+        <p class="muted">See README.md for the full walkthrough.</p>
+    </div>
+</main>
+</body>
+</html>

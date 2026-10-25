@@ -1,0 +1,49 @@
+{# Shared building blocks: icons, csrf field, badges, page header #}
+
+{% macro csrf() %}<input type="hidden" name="_csrf" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro icon(name) -%}
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if name == 'users' -%}<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+{%- elif name == 'wallet' -%}<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+{%- elif name == 'swap' -%}<path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/>
+{%- elif name == 'landmark' -%}<path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M12 3L3 9h18z"/>
+{%- elif name == 'building' -%}<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>
+{%- elif name == 'grid' -%}<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+{%- elif name == 'plus' -%}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'arrow' -%}<path d="M5 12h14M13 6l6 6-6 6"/>
+{%- elif name == 'up' -%}<path d="M7 17L17 7M8 7h9v9"/>
+{%- elif name == 'down' -%}<path d="M17 7L7 17M16 17H7V8"/>
+{%- elif name == 'shield' -%}<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+{%- elif name == 'bolt' -%}<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>
+{%- elif name == 'clock' -%}<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+{%- elif name == 'search' -%}<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+{%- elif name == 'menu' -%}<path d="M3 6h18M3 12h18M3 18h18"/>
+{%- elif name == 'check' -%}<path d="M20 6L9 17l-5-5"/>
+{%- elif name == 'alert' -%}<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+{%- elif name == 'info' -%}<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+{%- elif name == 'file' -%}<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{% macro badge(value) -%}
+<span class="badge badge-{{ value|badge }}">{{ value or '—' }}</span>
+{%- endmacro %}
+
+{% macro page_header(eyebrow, title, subtitle) %}
+<header class="page-header">
+    <p class="eyebrow">{{ eyebrow }}</p>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p class="page-sub">{{ subtitle }}</p>{% endif %}
+</header>
+{% endmacro %}
+
+{% macro table_tools(target, placeholder='Search this table…') %}
+<div class="table-tools">
+    <label class="search">
+        {{ icon('search') }}
+        <input type="search" data-filter="{{ target }}" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}">
+    </label>
+</div>
+{% endmacro %}

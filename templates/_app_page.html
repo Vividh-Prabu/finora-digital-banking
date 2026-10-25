@@ -1,0 +1,9 @@
+{# Base for all inner pages: container + flash messages. #}
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block content %}
+<div class="container page">
+    {% include '_flash.html' %}
+    {% block page %}{% endblock %}
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, csrf, badge, page_header, table_tools %}
+{% block title %}Transactions{% endblock %}
+
+{% block page %}
+{{ page_header('Money movement', 'Transactions', 'Record deposits and withdrawals and track available balances.') }}
+
+<section class="grid-2 grid-2-wide-left">
+    <article class="panel">
+        <div class="panel-head"><div><h2>Record a transaction</h2><p>Choose an active account and enter the details.</p></div></div>
+        {% if accounts %}
+        <form method="post" action="{{ url_for('transactions') }}" class="form">
+            {{ csrf() }}
+            <div class="form-grid cols-2">
+                <label class="full"><span>Bank account <i class="req">*</i></span>
+                    <select name="AccountNo" required>
+                        <option value="">Select account</option>
+                        {% for a in accounts %}
+                        <option value="{{ a.AccountNo }}" {{ 'selected' if pre_account == a.AccountNo|string }}>
+                            {{ a.AccountNo }} · {{ a.FullName }} · {{ a.AccountType }} · {{ a.Balance|inr }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label><span>Type <i class="req">*</i></span>
+                    <select name="TransactionType" required>
+                        <option value="">Select type</option>
+                        <option>Deposit</option>
+                        <option>Withdrawal</option>
+                    </select>
+                </label>
+                <label><span>Amount (₹) <i class="req">*</i></span>
+                    <input type="number" name="Amount" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
+                </label>
+                <label><span>Payment mode <i class="req">*</i></span>
+                    <select name="Mode" required>
+                        <option value="">Select mode</option>
+                        {% for m in ['Cash', 'UPI', 'Bank Transfer', 'Card'] %}<option>{{ m }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label>Description
+                    <input type="text" name="Description" maxlength="255" placeholder="Optional details">
+                </label>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Record transaction</button></div>
+        </form>
+        {% else %}
+        <p class="empty-state">No active accounts found. <a href="{{ url_for('accounts') }}">Open an account first →</a></p>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <div class="panel-head"><div><h2>Account balances</h2><p>Active accounts</p></div></div>
+        {% if accounts %}
+        <div class="table-wrap"><table>
+            <thead><tr><th>Account</th><th>Type</th><th class="num">Balance</th></tr></thead>
+            <tbody>
+            {% for a in accounts %}
+                <tr>
+                    <td><span class="strong">{{ a.AccountNo }}</span><br><small class="muted">{{ a.FullName }}</small></td>
+                    <td>{{ a.AccountType }}</td>
+                    <td class="num strong">{{ a.Balance|inr }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <p class="empty-state">No active accounts yet.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Transaction history</h2>
+            <p>{% if total_transactions > limit %}Showing the latest {{ limit }} of {{ total_transactions }}{% else %}{{ total_transactions }} transaction{{ '' if total_transactions == 1 else 's' }}{% endif %}</p>
+        </div>
+        {% if transactions %}{{ table_tools('transactions-table', 'Search history…') }}{% endif %}
+    </div>
+    {% if transactions %}
+    <div class="table-wrap"><table id="transactions-table">
+        <thead><tr><th>ID</th><th>Account</th><th>Date &amp; time</th><th>Type</th><th class="num">Amount</th><th>Mode</th><th>Description</th></tr></thead>
+        <tbody>
+        {% for t in transactions %}
+            <tr>
+                <td>#{{ t.TransactionID }}</td>
+                <td>{{ t.AccountNo }}</td>
+                <td>{{ t.TransactionDate|dt }}</td>
+                <td>{{ badge(t.TransactionType) }}</td>
+                <td class="num strong">{{ t.Amount|inr }}</td>
+                <td>{{ t.Mode or '—' }}</td>
+                <td class="wrap">{{ t.Description or '—' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    <p class="no-match" hidden>No transactions match your search.</p>
+    {% else %}
+    <p class="empty-state">No transactions recorded yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

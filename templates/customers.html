@@ -1,0 +1,89 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, csrf, page_header, table_tools %}
+{% block title %}Customers{% endblock %}
+
+{% block page %}
+{{ page_header('Customer management', 'Customer records', 'Register customers and keep their KYC details in one place.') }}
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Register a customer</h2><p>Fields marked <span class="req">*</span> are required.</p></div></div>
+    <form method="post" action="{{ url_for('customers') }}" class="form">
+        {{ csrf() }}
+        <div class="form-grid">
+            <label><span>Full name <i class="req">*</i></span>
+                <input type="text" name="FullName" maxlength="100" required value="{{ form.FullName or '' }}" autocomplete="name">
+            </label>
+            <label><span>Email <i class="req">*</i></span>
+                <input type="email" name="Email" maxlength="120" required value="{{ form.Email or '' }}" autocomplete="email">
+            </label>
+            <label><span>Phone number <i class="req">*</i></span>
+                <input type="tel" name="PhoneNo" maxlength="20" required value="{{ form.PhoneNo or '' }}" placeholder="e.g. 9876543210" autocomplete="tel">
+            </label>
+            <label>Date of birth
+                <input type="date" name="DateOfBirth" max="{{ today }}" value="{{ form.DateOfBirth or '' }}">
+            </label>
+            <label>Gender
+                <select name="Gender">
+                    <option value="">Select</option>
+                    {% for g in ['Female', 'Male', 'Other', 'Prefer not to say'] %}
+                    <option {{ 'selected' if form.Gender == g }}>{{ g }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Marital status
+                <select name="MaritalStatus">
+                    <option value="">Select</option>
+                    {% for m in ['Single', 'Married', 'Other'] %}
+                    <option {{ 'selected' if form.MaritalStatus == m }}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Aadhaar number
+                <input type="text" name="AadhaarNo" maxlength="14" inputmode="numeric" value="{{ form.AadhaarNo or '' }}" placeholder="12 digits">
+                <small>12 digits, optional</small>
+            </label>
+            <label>PAN number
+                <input type="text" name="PANNo" maxlength="10" value="{{ form.PANNo or '' }}" placeholder="ABCDE1234F" style="text-transform: uppercase">
+                <small>Optional</small>
+            </label>
+            <label class="full">Address
+                <textarea name="Address" rows="3" maxlength="255">{{ form.Address or '' }}</textarea>
+            </label>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Register customer</button>
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div><h2>Registered customers</h2><p>{{ customers|length }} record{{ '' if customers|length == 1 else 's' }}</p></div>
+        {% if customers %}{{ table_tools('customers-table', 'Search customers…') }}{% endif %}
+    </div>
+    {% if customers %}
+    <div class="table-wrap"><table id="customers-table">
+        <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Registered</th><th class="actions-col">Actions</th></tr></thead>
+        <tbody>
+        {% for c in customers %}
+            <tr>
+                <td>#{{ c.CustomerID }}</td>
+                <td class="strong">{{ c.FullName }}</td>
+                <td>{{ c.PhoneNo }}</td>
+                <td>{{ c.Email }}</td>
+                <td class="wrap">{{ c.Address or '—' }}</td>
+                <td>{{ c.CreatedAt|d }}</td>
+                <td class="actions-col">
+                    <a class="chip-link" href="{{ url_for('accounts', customer=c.CustomerID) }}">Open account</a>
+                    <a class="chip-link" href="{{ url_for('loans', customer=c.CustomerID) }}">Apply loan</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    <p class="no-match" hidden>No customers match your search.</p>
+    {% else %}
+    <p class="empty-state">No customers yet. Register your first customer above.</p>
+    {% endif %}
+</section>
+{% endblock %}

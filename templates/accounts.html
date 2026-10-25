@@ -1,0 +1,77 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, csrf, badge, page_header, table_tools %}
+{% block title %}Accounts{% endblock %}
+
+{% block page %}
+{{ page_header('Account management', 'Bank accounts', 'Open accounts for customers and monitor live balances.') }}
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Open a bank account</h2><p>Select an existing customer and branch.</p></div></div>
+    {% if customers and branches %}
+    <form method="post" action="{{ url_for('accounts') }}" class="form">
+        {{ csrf() }}
+        <div class="form-grid">
+            <label><span>Customer <i class="req">*</i></span>
+                <select name="CustomerID" required>
+                    <option value="">Select customer</option>
+                    {% for c in customers %}
+                    <option value="{{ c.CustomerID }}" {{ 'selected' if pre_customer == c.CustomerID|string }}>{{ c.FullName }} (ID {{ c.CustomerID }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label><span>Branch <i class="req">*</i></span>
+                <select name="BranchID" required>
+                    <option value="">Select branch</option>
+                    {% for b in branches %}
+                    <option value="{{ b.BranchID }}" {{ 'selected' if pre_branch == b.BranchID|string }}>{{ b.BranchName }} — {{ b.City }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label><span>Account type <i class="req">*</i></span>
+                <select name="AccountType" required>
+                    <option value="">Select account type</option>
+                    {% for t in ['Savings', 'Current', 'Salary', 'Fixed Deposit'] %}<option>{{ t }}</option>{% endfor %}
+                </select>
+            </label>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Create account</button></div>
+    </form>
+    {% elif not customers %}
+    <p class="empty-state">Register a customer before opening an account. <a href="{{ url_for('customers') }}">Go to Customers →</a></p>
+    {% else %}
+    <p class="empty-state">No branch exists yet. <a href="{{ url_for('branches') }}">Add a branch →</a></p>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div><h2>All accounts</h2><p>{{ accounts|length }} account{{ '' if accounts|length == 1 else 's' }}</p></div>
+        {% if accounts %}{{ table_tools('accounts-table', 'Search accounts…') }}{% endif %}
+    </div>
+    {% if accounts %}
+    <div class="table-wrap"><table id="accounts-table">
+        <thead><tr><th>Account no.</th><th>Customer</th><th>Branch</th><th>IFSC</th><th>Type</th><th>Opened</th><th>Status</th><th class="num">Balance</th><th class="actions-col">Actions</th></tr></thead>
+        <tbody>
+        {% for a in accounts %}
+            <tr>
+                <td class="strong">{{ a.AccountNo }}</td>
+                <td>{{ a.FullName }}</td>
+                <td>{{ a.BranchName }}</td>
+                <td><code>{{ a.IFSCCode }}</code></td>
+                <td>{{ a.AccountType }}</td>
+                <td>{{ a.OpenDate|d }}</td>
+                <td>{{ badge(a.Status) }}</td>
+                <td class="num strong">{{ a.Balance|inr }}</td>
+                <td class="actions-col">
+                    {% if a.Status == 'Active' %}<a class="chip-link" href="{{ url_for('transactions', account=a.AccountNo) }}">Transact</a>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    <p class="no-match" hidden>No accounts match your search.</p>
+    {% else %}
+    <p class="empty-state">No accounts have been created yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

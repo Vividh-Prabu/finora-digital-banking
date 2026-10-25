@@ -1,0 +1,62 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, csrf, page_header, table_tools %}
+{% block title %}Branches{% endblock %}
+
+{% block page %}
+{{ page_header('Branch network', 'Bank branches', 'Create branches before opening accounts. Every account is linked to a branch and its IFSC code.') }}
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Add a branch</h2><p>Fields marked <span class="req">*</span> are required.</p></div></div>
+    <form method="post" action="{{ url_for('branches') }}" class="form">
+        {{ csrf() }}
+        <div class="form-grid">
+            <label><span>Branch name <i class="req">*</i></span>
+                <input type="text" name="BranchName" maxlength="100" required value="{{ form.BranchName or '' }}" placeholder="e.g. Main Branch">
+            </label>
+            <label><span>City <i class="req">*</i></span>
+                <input type="text" name="City" maxlength="100" required value="{{ form.City or '' }}">
+            </label>
+            <label><span>IFSC code <i class="req">*</i></span>
+                <input type="text" name="IFSCCode" maxlength="11" required value="{{ form.IFSCCode or '' }}" placeholder="DEMO0000001" style="text-transform: uppercase">
+                <small>11 characters: 4 letters, a 0, then 6 letters/digits</small>
+            </label>
+            <label>Phone
+                <input type="tel" name="PhoneNo" maxlength="20" value="{{ form.PhoneNo or '' }}">
+            </label>
+            <label class="full">Address
+                <input type="text" name="Address" maxlength="255" value="{{ form.Address or '' }}">
+            </label>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Add branch</button></div>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div><h2>All branches</h2><p>{{ branches|length }} branch{{ '' if branches|length == 1 else 'es' }}</p></div>
+        {% if branches %}{{ table_tools('branches-table', 'Search branches…') }}{% endif %}
+    </div>
+    {% if branches %}
+    <div class="table-wrap"><table id="branches-table">
+        <thead><tr><th>ID</th><th>Name</th><th>City</th><th>IFSC</th><th>Phone</th><th>Address</th><th class="num">Accounts</th><th class="actions-col">Actions</th></tr></thead>
+        <tbody>
+        {% for b in branches %}
+            <tr>
+                <td>#{{ b.BranchID }}</td>
+                <td class="strong">{{ b.BranchName }}</td>
+                <td>{{ b.City }}</td>
+                <td><code>{{ b.IFSCCode }}</code></td>
+                <td>{{ b.PhoneNo or '—' }}</td>
+                <td class="wrap">{{ b.Address or '—' }}</td>
+                <td class="num">{{ b.AccountCount }}</td>
+                <td class="actions-col"><a class="chip-link" href="{{ url_for('accounts', branch=b.BranchID) }}">Open account</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    <p class="no-match" hidden>No branches match your search.</p>
+    {% else %}
+    <p class="empty-state">No branches yet. Add your first branch above to start opening accounts.</p>
+    {% endif %}
+</section>
+{% endblock %}

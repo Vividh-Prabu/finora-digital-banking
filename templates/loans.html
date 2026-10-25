@@ -1,0 +1,177 @@
+{% extends '_app_page.html' %}
+{% from '_macros.html' import icon, csrf, badge, page_header, table_tools %}
+{% block title %}Loans{% endblock %}
+
+{% block page %}
+{{ page_header('Lending services', 'Loan management', 'Take applications, make decisions and track repayments.') }}
+
+<section class="panel">
+    <div class="panel-head"><div><h2>New loan application</h2><p>Applications start as <em>Pending</em> until approved or rejected.</p></div></div>
+    {% if customers %}
+    <form method="post" action="{{ url_for('loans') }}" class="form">
+        {{ csrf() }}
+        <input type="hidden" name="action" value="apply">
+        <div class="form-grid">
+            <label><span>Customer <i class="req">*</i></span>
+                <select name="CustomerID" required>
+                    <option value="">Select customer</option>
+                    {% for c in customers %}
+                    <option value="{{ c.CustomerID }}" {{ 'selected' if pre_customer == c.CustomerID|string }}>{{ c.FullName }} (ID {{ c.CustomerID }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label><span>Loan type <i class="req">*</i></span>
+                <select name="LoanType" required>
+                    <option value="">Select type</option>
+                    {% for t in loan_types %}<option>{{ t }}</option>{% endfor %}
+                </select>
+            </label>
+            <label><span>Requested amount (₹) <i class="req">*</i></span>
+                <input type="number" name="RequestedAmount" min="0.01" step="0.01" required inputmode="decimal">
+            </label>
+            <label class="full">Purpose
+                <input type="text" name="Purpose" maxlength="255" placeholder="Reason for the loan">
+            </label>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Submit application</button></div>
+    </form>
+    {% else %}
+    <p class="empty-state">Register a customer before applying for a loan. <a href="{{ url_for('customers') }}">Open Customers →</a></p>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div><h2>Loan applications</h2><p>{{ applications|length }} application{{ '' if applications|length == 1 else 's' }}</p></div>
+        {% if applications %}{{ table_tools('applications-table', 'Search applications…') }}{% endif %}
+    </div>
+    {% if applications %}
+    <div class="table-wrap"><table id="applications-table">
+        <thead><tr><th>ID</th><th>Customer</th><th>Type</th><th class="num">Requested</th><th>Date</th><th>Purpose</th><th>Status</th><th>Decision</th></tr></thead>
+        <tbody>
+        {% for a in applications %}
+            <tr>
+                <td>#{{ a.ApplicationID }}</td>
+                <td class="strong">{{ a.FullName }}</td>
+                <td>{{ a.LoanType }}</td>
+                <td class="num">{{ a.RequestedAmount|inr }}</td>
+                <td>{{ a.ApplicationDate|d }}</td>
+                <td class="wrap">{{ a.Purpose or '—' }}</td>
+                <td>{{ badge(a.Status) }}</td>
+                <td>
+                {% if a.Status == 'Pending' %}
+                    <form method="post" action="{{ url_for('loans') }}" class="decision-form">
+                        {{ csrf() }}
+                        <input type="hidden" name="ApplicationID" value="{{ a.ApplicationID }}">
+                        <label class="inline">Rate %
+                            <input type="number" name="InterestRate" min="0" max="100" step="0.01" value="10" required aria-label="Interest rate percent">
+                        </label>
+                        <label class="inline">Months
+                            <input type="number" name="TenureMonths" min="1" max="360" value="12" required aria-label="Tenure in months">
+                        </label>
+                        <button class="btn btn-sm btn-primary" name="action" value="approve" type="submit">Approve</button>
+                        <button class="btn btn-sm btn-danger-ghost" name="action" value="reject" type="submit" data-confirm="Reject application #{{ a.ApplicationID }}?">Reject</button>
+                    </form>
+                {% elif a.LoanID %}
+                    <span class="muted">Loan #{{ a.LoanID }}</span>
+                {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    <p class="no-match" hidden>No applications match your search.</p>
+    {% else %}
+    <p class="empty-state">No loan applications yet.</p>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div><h2>Sanctioned loans</h2><p>{{ loans|length }} loan{{ '' if loans|length == 1 else 's' }}</p></div>
+    </div>
+    {% if loans %}
+    <div class="table-wrap"><table>
+        <thead><tr><th>Loan</th><th>Customer</th><th>Type</th><th class="num">Sanctioned</th><th>Rate</th><th>Tenure</th><th class="num">Paid</th><th class="num">Outstanding</th><th>Progress</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for l in loans %}
+            <tr>
+                <td>#{{ l.LoanID }}</td>
+                <td class="strong">{{ l.FullName }}</td>
+                <td>{{ l.LoanType }}</td>
+                <td class="num">{{ l.SanctionAmount|inr }}</td>
+                <td>{{ l.InterestRate }}%</td>
+                <td>{{ l.TenureMonths }} mo</td>
+                <td class="num">{{ l.TotalPaid|inr }}</td>
+                <td class="num strong">{{ l.Outstanding|inr }}</td>
+                <td><div class="progress" role="img" aria-label="{{ l.Percent }}% repaid"><span style="width: {{ l.Percent }}%"></span></div><small class="muted">{{ l.Percent }}%</small></td>
+                <td>{{ badge(l.Status) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}
+    <p class="empty-state">No loans have been approved yet.</p>
+    {% endif %}
+</section>
+
+<section class="grid-2 grid-2-wide-right">
+    <article class="panel">
+        <div class="panel-head"><div><h2>Record a repayment</h2><p>Only active loans can be repaid.</p></div></div>
+        {% set active_loans = loans|selectattr('Status', 'equalto', 'Active')|list %}
+        {% if active_loans %}
+        <form method="post" action="{{ url_for('loans') }}" class="form">
+            {{ csrf() }}
+            <input type="hidden" name="action" value="repay">
+            <div class="form-grid cols-1">
+                <label><span>Active loan <i class="req">*</i></span>
+                    <select name="LoanID" required>
+                        <option value="">Select loan</option>
+                        {% for l in active_loans %}
+                        <option value="{{ l.LoanID }}">Loan #{{ l.LoanID }} · {{ l.FullName }} · {{ l.Outstanding|inr }} due</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label><span>Amount paid (₹) <i class="req">*</i></span>
+                    <input type="number" name="AmountPaid" min="0.01" step="0.01" required inputmode="decimal">
+                </label>
+                <label><span>Payment mode <i class="req">*</i></span>
+                    <select name="PaymentMode" required>
+                        <option value="">Select mode</option>
+                        {% for m in ['Cash', 'UPI', 'Bank Transfer', 'Card'] %}<option>{{ m }}</option>{% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Record repayment</button></div>
+        </form>
+        {% else %}
+        <p class="empty-state">{{ 'All loans are fully repaid.' if loans else 'Approve a loan before recording a repayment.' }}</p>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <div class="panel-head"><div><h2>Repayment history</h2><p>{{ payments|length }} payment{{ '' if payments|length == 1 else 's' }}</p></div></div>
+        {% if payments %}
+        <div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Loan</th><th>Date</th><th class="num">Amount</th><th class="num">Principal</th><th class="num">Interest</th><th>Mode</th><th class="num">Outstanding</th></tr></thead>
+            <tbody>
+            {% for p in payments %}
+                <tr>
+                    <td>#{{ p.PaymentID }}</td>
+                    <td>#{{ p.LoanID }}</td>
+                    <td>{{ p.PaymentDate|d }}</td>
+                    <td class="num strong">{{ p.AmountPaid|inr }}</td>
+                    <td class="num">{{ p.PrincipalAmount|inr }}</td>
+                    <td class="num">{{ p.InterestAmount|inr }}</td>
+                    <td>{{ p.PaymentMode or '—' }}</td>
+                    <td class="num">{{ p.BalanceOutstanding|inr }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <p class="empty-state">No repayments recorded yet.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
